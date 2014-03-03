@@ -144,12 +144,12 @@
                                     var body_html = new Showdown.converter().makeHtml(comment.body);
                                     var body = $("<div/>").html(body_html).text();
             
-                                    if (/:\+\d+:/.test(body)) {
+                                    if (/:\+\d+:/.test(body) || /:metal:/.test(body) || /:v:/.test(body)) {
                                         approve_status = 'approved';
                                         approve_url = comment.html_url;
                                     }
                 
-                                    if (/:-\d+:/.test(body)) {
+                                    if (/:-\d+:/.test(body) || /:facepunch:/.test(body) || /:poo:/.test(body)) {
                                         approve_status = 'rejected';
                                         approve_url = comment.html_url;
                                     }
