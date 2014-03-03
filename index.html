@@ -41,6 +41,17 @@
                         </div>
                         <div class="modal-body">
                             <div class="form-group">
+                                <label for="auth-modal-username">Username</label>
+                                <input class="form-control" id="auth-modal-username">
+                            </div>
+                            <div class="form-group">
+                                <label for="auth-modal-password">Password</label>
+                                <input class="form-control" id="auth-modal-password">
+                            </div>
+                            <div>
+                                <h4 style="text-align: center;">OR</h4>
+                            </div>
+                            <div class="form-group">
                                 <label for="auth-modal-token">Access token</label>
                                 <input class="form-control" id="auth-modal-token">
                                 <p class="help-block"><a href="https://github.com/settings/applications#personal-access-tokens" target="_blank">Generate a personal access token</a> with <i>repo</i> permission to use this web app.</p>
@@ -48,7 +59,7 @@
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Connect</button>
+                            <button type="button" class="btn btn-primary" id="auth-modal-connect">Connect</button>
                         </div>
                     </form>
                 </div>
@@ -266,19 +277,30 @@
                 };
                 
                 var refresh = function() {
-                    if (localStorage['token']) {
+                    if ((localStorage['username'] && localStorage['password']) || localStorage['token']) {
                         $('#auth').html('<li><p class="navbar-text">Connecting...</p></li>');
                         $('#repos').html('');
+                        
+                        if (localStorage['token']) {
+                            options = {
+                                token: localStorage['token'],
+                                auth: 'oauth',
+                            };
+                        } else {
+                            options = {
+                                username: localStorage['username'],
+                                password: localStorage['password'],
+                                auth: 'basic',
+                            };
+                        }
                 
-                        var github_api = new Github({
-                            token: localStorage['token'],
-                            auth: 'oauth',
-                        });
+                        var github_api = new Github(options);
                 
                         var user_api = github_api.getUser();
                 
                         user_api.show(null, function(err, user) {
                             if (err) {
+                                localStorage.removeItem('password');
                                 localStorage.removeItem('token');
                                 refresh();
                             } else {
@@ -303,20 +325,25 @@
                     }
                 }
                 $('#auth-modal').on('shown.bs.modal', function() {
-                    $('#auth-modal-token').focus();
+                    $('#auth-modal-username').focus();
                 });
                 
                 $(document).on('click', '.auth-sign-out', function() {
+                    localStorage.removeItem('password');
                     localStorage.removeItem('token');
                     refresh();
                 });
                 
                 $(document).on('click', '.auth-sign-in', function() {
+                    $('#auth-modal-username').val(localStorage['username']);
+                    $('#auth-modal-password').val('');
                     $('#auth-modal-token').val('');
                     $('#auth-modal').modal('show');
                 });
                 
-                $(document).on('click', '#auth-modal button[type="submit"]', function() {
+                $(document).on('click', '#auth-modal-connect', function() {
+                    localStorage['username'] = $('#auth-modal-username').val();
+                    localStorage['password'] = $('#auth-modal-password').val();
                     localStorage['token'] = $('#auth-modal-token').val();
                     refresh();
                     
