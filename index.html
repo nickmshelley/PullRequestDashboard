@@ -10,12 +10,14 @@
         
         <style>
             tr.pull td.number {
-                width: 5em;
                 text-align: right;
             }
-            tr.pull td.approve,
-            tr.pull td.verify {
-                width: 8em;
+            .gravatar {
+                position: relative;
+                vertical-align: middle;
+                top: -1px;
+                margin-right: 2px;
+                border-radius: 2px;
             }
         </style>
     </head>
@@ -67,7 +69,21 @@
         </div>
     
         <div class="container">
-            <div id="repos"></div>
+            <table class="table table-striped" id="repos">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Subject</th>
+                        <th>Repository</th>
+                        <th>Opened</th>
+                        <th>Requester</th>
+                        <th>Reviewed</th>
+                        <th>Verified</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
         </div>
         
         <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
@@ -96,24 +112,18 @@
             <p><a href="#" class="auth-sign-in">Connect to GitHub</a> to view all open pull requests.</p>
         </script>
         
-        <script id="repo-table-template" type="text/x-handlebars-template">
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th colspan="4"><a href="{{repo.html_url}}">{{repo.owner.login}}/{{repo.name}}</a></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {{#each pulls}}
-                    <tr class="pull" id="pull-{{id}}">
-                        <td class="number">#{{number}}</td>
-                        <td class="title"><a href="{{html_url}}">{{title}}</a></td>
-                        <td class="approve"><span class="text-muted">...</span></td>
-                        <td class="verify"><span class="text-muted">...</span></td>
-                    </tr>
-                    {{/each}}
-                </tbody>
-            </table>
+        <script id="repo-rows-template" type="text/x-handlebars-template">
+            {{#each pulls}}
+            <tr class="pull" id="pull-{{id}}">
+                <td class="number">#{{number}}</td>
+                <td class="title"><a href="{{html_url}}">{{title}}</a></td>
+                <td class="repo"><a href="{{../repo.html_url}}">{{../repo.owner.login}}/{{../repo.name}}</a></td>
+                <td class="opened">{{created_at_humanized}}</td>
+                <td class="requester"><a href="{{user.html_url}}"><img class="gravatar" src="{{user.avatar_url}}" width="18px" height="18px" /></a> <a href="{{user.html_url}}">{{user.login}}</a></td>
+                <td class="approve"><span class="text-muted">...</span></td>
+                <td class="verify"><span class="text-muted">...</span></td>
+            </tr>
+            {{/each}}
         </script>
         
         <script>
@@ -178,6 +188,7 @@
                 };
                 
                 var updateVerificationStatus = function(repo_api, pull, cb) {
+                    console.log(pull);
                     repo_api.listStatuses(pull.head.sha, function(err, statuses) {
                         var verify_status = '';
                         var verify_url = '';
@@ -202,8 +213,12 @@
                             // Get the pull requests for this repo
                             repo_api.listPulls('open', function(err, pulls) {
                                 if (pulls.length > 0) {
-                                    var template = Handlebars.compile($("#repo-table-template").html());
-                                    $('#repos').append(template({
+                                    $.each(pulls, function(i, pull) {
+                                        pull.created_at_humanized = new Date(Date.parse(pull.created_at)).toDateString();
+                                    });
+                                
+                                    var template = Handlebars.compile($("#repo-rows-template").html());
+                                    $('#repos tbody').append(template({
                                         repo: repo,
                                         pulls: pulls,
                                     }));
@@ -279,7 +294,7 @@
                 var refresh = function() {
                     if ((localStorage['username'] && localStorage['password']) || localStorage['token']) {
                         $('#auth').html('<li><p class="navbar-text">Connecting...</p></li>');
-                        $('#repos').html('');
+                        $('#repos tbody').html('');
                         
                         if (localStorage['token']) {
                             options = {
@@ -321,7 +336,7 @@
                         $('#auth').html(template());
                         
                         var template = Handlebars.compile($("#repos-not-signed-in-template").html());
-                        $('#repos').html(template());
+                        $('#repos tbody').html(template());
                     }
                 }
                 $('#auth-modal').on('shown.bs.modal', function() {
