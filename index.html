@@ -248,7 +248,7 @@
                             repo_api.listPulls('open', function(err, pulls) {
                                 if (pulls.length > 0) {
                                     $.each(pulls, function(i, pull) {
-                                        pull.created_at_humanized = new Date(Date.parse(pull.created_at)).toDateString();
+                                        pull.created_at_humanized = new Date(Date.parse(pull.created_at)).toLocaleString();
                                     });
                                 
                                     var template = Handlebars.compile($("#pull-requests-rows-template").html());
