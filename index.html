@@ -9,6 +9,7 @@
         <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
         
         <style>
+            th.identifier,
             tr.pull td.number {
                 text-align: right;
             }
@@ -81,7 +82,7 @@
             <table class="table table-hover" id="pull-requests">
                 <thead>
                     <tr>
-                        <th>ID</th>
+                        <th class="identifier">ID</th>
                         <th>Subject</th>
                         <th>Repository</th>
                         <th>Opened</th>
@@ -145,7 +146,7 @@
             <tr class="pull" id="pull-{{id}}">
                 <td class="number">#{{number}}</td>
                 <td class="title"><a href="{{html_url}}">{{title}}</a></td>
-                <td class="repo"><a href="{{../repo.html_url}}">{{../repo.owner.login}}/{{../repo.name}}</a></td>
+                <td class="repo"><a href="{{../repo.html_url}}">{{../repo.name}}</a></td>
                 <td class="opened">{{created_at_humanized}}</td>
                 <td class="requester"><a href="{{user.html_url}}"><img class="gravatar" src="{{user.avatar_url}}" width="18px" height="18px" /></a> <a href="{{user.html_url}}">{{user.login}}</a></td>
                 <td class="approve"><span class="text-muted">...</span></td>
@@ -166,7 +167,7 @@
                     case 'rejected':
                         return '<a class="text-danger" href="' + url + '"><span class="glyphicon glyphicon-remove"></span></a>';
                     default:
-                        return '<span class="text-muted"><span class="glyphicon glyphicon-minus"></span></span>';
+                        return '<span class="text-muted">&mdash;</span>';
                     }
                 };
                 
@@ -213,12 +214,12 @@
                     case 'success':
                         return '<a class="text-success" href="' + url + '"><span class="glyphicon glyphicon-ok"></span></a>';
                     case 'pending':
-                        return '<a class="text-warning" href="' + url + '"><span class="glyphicon glyphicon-time"></span></a>';
+                        return '<a href="' + url + '"><span class="glyphicon glyphicon-time"></span></a>';
                     case 'error':
                     case 'failure':
                         return '<a class="text-danger" href="' + url + '"><span class="glyphicon glyphicon-remove"></span></a>';
                     default:
-                        return '<span class="text-muted"><span class="glyphicon glyphicon-minus"></span></span>';
+                        return '<span class="text-muted">&mdash;</span>';
                     }
                 };
                 
