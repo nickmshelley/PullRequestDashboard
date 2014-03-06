@@ -93,6 +93,10 @@
                 <tbody>
                 </tbody>
             </table>
+            
+            <div id="approve-legend">
+                <p>Set code review status by making a comment on the pull request with <code>:+1:</code> to approve, or <code>:-1:</code> to reject.</p>
+            </div>
         </div>
         
         <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
@@ -137,6 +141,9 @@
         
         <script>
             $(function() {
+                var approveSentinels = [ ':+1:', ':v:', ':metal:' ];
+                var rejectSentinels = [ ':-1:', ':poop:', ':facepunch:' ];
+                
                 var approveStatus = function(status, url) {
                     switch (status) {
                     case 'approved':
@@ -163,12 +170,16 @@
                                     var body_html = new Showdown.converter().makeHtml(comment.body);
                                     var body = $("<div/>").html(body_html).text();
             
-                                    if (/:\+\d+:/.test(body) || /:metal:/.test(body) || /:v:/.test(body)) {
+                                    if (approveSentinels.some(function(s) {
+                                        return body.indexOf(s) >= 0;
+                                    })) {
                                         approve_status = 'approved';
                                         approve_url = comment.html_url;
                                     }
                 
-                                    if (/:-\d+:/.test(body) || /:facepunch:/.test(body) || /:poop:/.test(body)) {
+                                    if (rejectSentinels.some(function(s) {
+                                        return body.indexOf(s) >= 0;
+                                    })) {
                                         approve_status = 'rejected';
                                         approve_url = comment.html_url;
                                     }
@@ -197,7 +208,6 @@
                 };
                 
                 var updateVerificationStatus = function(repo_api, pull, cb) {
-                    console.log(pull);
                     repo_api.listStatuses(pull.head.sha, function(err, statuses) {
                         var verify_status = '';
                         var verify_url = '';
