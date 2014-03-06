@@ -33,12 +33,12 @@
 
     <body>
         <div class="navbar navbar-default navbar-static-top" role="navigation">
-            <div class="container">
+            <div class="container-fluid">
                 <div class="navbar-header">
                     <a class="navbar-brand" href="#">Pull Request Dashboard</a>
                 </div>
-                <ul class="nav navbar-nav navbar-right" id="auth">
-                </ul>
+                <ul class="nav navbar-nav" id="repos"></ul>
+                <ul class="nav navbar-nav navbar-right" id="auth"></ul>
             </div>
         </div>
         
@@ -78,7 +78,7 @@
         </div>
     
         <div class="container-fluid">
-            <table class="table table-hover" id="repos">
+            <table class="table table-hover" id="pull-requests">
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -93,7 +93,7 @@
                 <tbody>
                 </tbody>
             </table>
-            
+    
             <div id="approve-legend">
                 <p>Set code review status by making a comment on the pull request with <code>:+1:</code> to approve, or <code>:-1:</code> to reject.</p>
             </div>
@@ -121,11 +121,26 @@
             </li>
         </script>
         
-        <script id="repos-not-signed-in-template" type="text/x-handlebars-template">
+        <script id="repos-template" type="text/x-handlebars-template">
+            <li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown">Repositories <b class="caret"></b></a>
+                <ul class="dropdown-menu">
+                    {{#each owners}}
+                    {{#unless @first}}<li role="presentation" class="divider"></li>{{/unless}}
+                    <li role="presentation" class="dropdown-header">{{@key}}</li>
+                        {{#each this}}
+                        <li><a href="{{html_url}}">{{name}}</a></li>
+                        {{/each}}
+                    {{/each}}
+                </ul>
+            </li>
+        </script>
+        
+        <script id="pull-requests-not-signed-in-template" type="text/x-handlebars-template">
             <p><a href="#" class="auth-sign-in">Connect to GitHub</a> to view all open pull requests.</p>
         </script>
         
-        <script id="repo-rows-template" type="text/x-handlebars-template">
+        <script id="pull-requests-rows-template" type="text/x-handlebars-template">
             {{#each pulls}}
             <tr class="pull" id="pull-{{id}}">
                 <td class="number">#{{number}}</td>
@@ -236,8 +251,8 @@
                                         pull.created_at_humanized = new Date(Date.parse(pull.created_at)).toDateString();
                                     });
                                 
-                                    var template = Handlebars.compile($("#repo-rows-template").html());
-                                    $('#repos tbody').append(template({
+                                    var template = Handlebars.compile($("#pull-requests-rows-template").html());
+                                    $('#pull-requests tbody').append(template({
                                         repo: repo,
                                         pulls: pulls,
                                     }));
@@ -313,7 +328,7 @@
                 var refresh = function() {
                     if ((localStorage['username'] && localStorage['password']) || localStorage['token']) {
                         $('#auth').html('<li><p class="navbar-text">Connecting...</p></li>');
-                        $('#repos tbody').html('');
+                        $('#pull-requests tbody').html('');
                         
                         if (localStorage['token']) {
                             options = {
@@ -344,6 +359,20 @@
                                 }));
                 
                                 getRepos(user_api, function(repos) {
+                                    var owners = {};
+                                    $.each(repos, function(i, repo) {
+                                        if (owners[repo.owner.login] == undefined) {
+                                            owners[repo.owner.login] = [];
+                                        }
+
+                                        owners[repo.owner.login].push(repo);
+                                    });
+                                
+                                    var template = Handlebars.compile($("#repos-template").html());
+                                    $('#repos').html(template({
+                                        owners: owners,
+                                    }));
+                                        
                                     async.forEach(repos, function(repo, cb) {
                                         getRepoPulls(github_api, repo, cb);
                                     });
@@ -354,8 +383,8 @@
                         var template = Handlebars.compile($("#auth-not-signed-in-template").html());
                         $('#auth').html(template());
                         
-                        var template = Handlebars.compile($("#repos-not-signed-in-template").html());
-                        $('#repos tbody').html(template());
+                        var template = Handlebars.compile($("#pull-requests-not-signed-in-template").html());
+                        $('#pull-requests tbody').html(template());
                     }
                 }
                 $('#auth-modal').on('shown.bs.modal', function() {
