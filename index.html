@@ -12,6 +12,15 @@
             tr.pull td.number {
                 text-align: right;
             }
+            tr.pull td.requester {
+                white-space: nowrap;
+            }
+            th.approve,
+            th.verify,
+            tr.pull td.approve,
+            tr.pull td.verify {
+                text-align: center;
+            }
             .gravatar {
                 position: relative;
                 vertical-align: middle;
@@ -68,8 +77,8 @@
             </div>
         </div>
     
-        <div class="container">
-            <table class="table table-striped" id="repos">
+        <div class="container-fluid">
+            <table class="table table-hover" id="repos">
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -77,8 +86,8 @@
                         <th>Repository</th>
                         <th>Opened</th>
                         <th>Requester</th>
-                        <th>Reviewed</th>
-                        <th>Verified</th>
+                        <th class="approve"><abbr title="Code Review">CR</abbr></th>
+                        <th class="verify"><abbr title="Verification">V</abbr></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -131,11 +140,11 @@
                 var approveStatus = function(status, url) {
                     switch (status) {
                     case 'approved':
-                        return '<a class="text-success" href="' + url + '">&#9679; Approved</a>';
+                        return '<a class="text-success" href="' + url + '"><span class="glyphicon glyphicon-ok"></span></a>';
                     case 'rejected':
-                        return '<a class="text-danger" href="' + url + '">&#9679; Rejected</a>';
+                        return '<a class="text-danger" href="' + url + '"><span class="glyphicon glyphicon-remove"></span></a>';
                     default:
-                        return '<span class="text-muted">Not reviewed</span>';
+                        return '<span class="text-muted"><span class="glyphicon glyphicon-minus"></span></span>';
                     }
                 };
                 
@@ -176,14 +185,14 @@
                 var verifyStatus = function(status, url) {
                     switch (status) {
                     case 'success':
-                        return '<a class="text-success" href="' + url + '">&#9679; Verified</a>';
+                        return '<a class="text-success" href="' + url + '"><span class="glyphicon glyphicon-ok"></span></a>';
                     case 'pending':
-                        return '<a class="text-warning" href="' + url + '">&#9679; Pending...</a>';
+                        return '<a class="text-warning" href="' + url + '"><span class="glyphicon glyphicon-time"></span></a>';
                     case 'error':
                     case 'failure':
-                        return '<a class="text-danger" href="' + url + '">&#9679; Failed</a>';
+                        return '<a class="text-danger" href="' + url + '"><span class="glyphicon glyphicon-remove"></span></a>';
                     default:
-                        return '<span class="text-muted">Not tested</span>';
+                        return '<span class="text-muted"><span class="glyphicon glyphicon-minus"></span></span>';
                     }
                 };
                 
