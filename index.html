@@ -99,7 +99,7 @@
             </table>
     
             <div id="approve-legend">
-                <p class="text-muted">Set code review status by making a comment on the pull request with <span class="mono">:+1:</span> to approve, or <span class="mono">:-1:</span> to reject.</p>
+                <p class="text-muted">Make a comment on a pull request with <span class="mono">:+1:</span> to approve or <span class="mono">:-1:</span> to reject.</p>
             </div>
         </div>
         
@@ -215,12 +215,24 @@
                 var verifyStatus = function(status, url) {
                     switch (status) {
                     case 'success':
-                        return '<a class="text-success" href="' + url + '"><span class="glyphicon glyphicon-ok"></span></a>';
+                        if (url == null) {
+                            return '<span class="text-success"><span class="glyphicon glyphicon-ok"></span></span>';
+                        } else {
+                            return '<a class="text-success" href="' + url + '"><span class="glyphicon glyphicon-ok"></span></a>';
+                        }
                     case 'pending':
-                        return '<a href="' + url + '"><span class="glyphicon glyphicon-time"></span></a>';
+                        if (url == null) {
+                            return '<span class="text-primary"><span class="glyphicon glyphicon-time"></span></span>';
+                        } else {
+                            return '<a href="' + url + '"><span class="glyphicon glyphicon-time"></span></a>';
+                        }
                     case 'error':
                     case 'failure':
-                        return '<a class="text-danger" href="' + url + '"><span class="glyphicon glyphicon-remove"></span></a>';
+                        if (url == null) {
+                            return '<span class="text-danger"><span class="glyphicon glyphicon-remove"></span></span>';
+                        } else {
+                            return '<a class="text-danger" href="' + url + '"><span class="glyphicon glyphicon-remove"></span></a>';
+                        }
                     default:
                         return '<span class="text-muted">&mdash;</span>';
                     }
