@@ -6,9 +6,14 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
         <title>Pull Request Dashboard</title>
-        <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+        <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css"/>
+        <link rel="stylesheet" href="Vendor/tablesorter/css/theme.bootstrap.css"/>
         
         <style>
+            .tablesorter-bootstrap .tablesorter-header {
+                background-color: transparent;
+            }
+        
             th.identifier,
             tr.pull td.number {
                 text-align: right;
@@ -82,16 +87,16 @@
         </div>
     
         <div class="container-fluid">
-            <table class="table table-hover" id="pull-requests">
+            <table class="table table-hover tablesorter" id="pull-requests">
                 <thead>
                     <tr>
-                        <th class="identifier">ID</th>
+                        <th>ID</th>
                         <th>Subject</th>
                         <th>Repository</th>
                         <th>Opened</th>
                         <th>Requester</th>
-                        <th class="approve"><abbr title="Code Review">CR</abbr></th>
-                        <th class="verify"><abbr title="Verification">V</abbr></th>
+                        <th class="approve">CR</th>
+                        <th class="verify">V</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -111,6 +116,8 @@
         <script src="Vendor/github/lib/underscore-min.js"></script>
         <script src="Vendor/github/lib/base64.js"></script>
         <script src="Vendor/github/github.js"></script>
+        <script src="Vendor/tablesorter/js/jquery.tablesorter.js"></script>
+        <script src="Vendor/tablesorter/js/jquery.tablesorter.widgets.js"></script>
         
         <script id="auth-not-signed-in-template" type="text/x-handlebars-template">
             <li><a href="#" class="auth-sign-in">Connect to GitHub</a></li>
@@ -166,11 +173,11 @@
                 var approveStatus = function(status, url) {
                     switch (status) {
                     case 'approved':
-                        return '<a class="text-success" href="' + url + '"><span class="glyphicon glyphicon-ok"></span></a>';
+                        return '<a class="text-success" href="' + url + '"><span class="glyphicon glyphicon-ok"></span><span class="hidden">1</span></a>';
                     case 'rejected':
-                        return '<a class="text-danger" href="' + url + '"><span class="glyphicon glyphicon-remove"></span></a>';
+                        return '<a class="text-danger" href="' + url + '"><span class="glyphicon glyphicon-remove"></span><span class="hidden">2</span></a>';
                     default:
-                        return '<span class="text-muted">&mdash;</span>';
+                        return '<span class="text-muted">&mdash;<span class="hidden">3</span></span>';
                     }
                 };
                 
@@ -206,6 +213,7 @@
                             });
                 
                             $('#pull-' + pull.id + ' .approve').html(approveStatus(approve_status, approve_url));
+                            $("#pull-requests").trigger("update");
             
                             cb(err);
                         });
@@ -216,25 +224,25 @@
                     switch (status) {
                     case 'success':
                         if (url == null) {
-                            return '<span class="text-success"><span class="glyphicon glyphicon-ok"></span></span>';
+                            return '<span class="text-success"><span class="glyphicon glyphicon-ok"></span><span class="hidden">1</span></span>';
                         } else {
-                            return '<a class="text-success" href="' + url + '"><span class="glyphicon glyphicon-ok"></span></a>';
+                            return '<a class="text-success" href="' + url + '"><span class="glyphicon glyphicon-ok"></span><span class="hidden">1</span></a>';
                         }
                     case 'pending':
                         if (url == null) {
-                            return '<span class="text-primary"><span class="glyphicon glyphicon-time"></span></span>';
+                            return '<span class="text-primary"><span class="glyphicon glyphicon-time"></span><span class="hidden">3</span></span>';
                         } else {
-                            return '<a href="' + url + '"><span class="glyphicon glyphicon-time"></span></a>';
+                            return '<a href="' + url + '"><span class="glyphicon glyphicon-time"></span><span class="hidden">3</span></a>';
                         }
                     case 'error':
                     case 'failure':
                         if (url == null) {
-                            return '<span class="text-danger"><span class="glyphicon glyphicon-remove"></span></span>';
+                            return '<span class="text-danger"><span class="glyphicon glyphicon-remove"></span><span class="hidden">2</span></span>';
                         } else {
-                            return '<a class="text-danger" href="' + url + '"><span class="glyphicon glyphicon-remove"></span></a>';
+                            return '<a class="text-danger" href="' + url + '"><span class="glyphicon glyphicon-remove"></span><span class="hidden">2</span></a>';
                         }
                     default:
-                        return '<span class="text-muted">&mdash;</span>';
+                        return '<span class="text-muted">&mdash;<span class="hidden">4</span></span>';
                     }
                 };
                 
@@ -250,6 +258,7 @@
                         }
             
                         $('#pull-' + pull.id + ' .verify').html(verifyStatus(verify_status, verify_url));
+                        $("#pull-requests").trigger("update");
     
                         cb(err);
                     });
@@ -272,6 +281,7 @@
                                         repo: repo,
                                         pulls: pulls,
                                     }));
+                                    $("#pull-requests").trigger("update");
                                 }
                             
                                 cb(err, pulls);
@@ -411,6 +421,8 @@
                     localStorage.removeItem('password');
                     localStorage.removeItem('token');
                     refresh();
+                    
+                    return false;
                 });
                 
                 $(document).on('click', '.auth-sign-in', function() {
@@ -418,6 +430,8 @@
                     $('#auth-modal-password').val('');
                     $('#auth-modal-token').val('');
                     $('#auth-modal').modal('show');
+                    
+                    return false;
                 });
                 
                 $(document).on('click', '#auth-modal-connect', function() {
@@ -427,6 +441,33 @@
                     refresh();
                     
                     $('#auth-modal').modal('hide');
+                    
+                    return false;
+                });
+                
+                $.extend($.tablesorter.themes.bootstrap, {
+                    // these classes are added to the table. To see other table classes available,
+                    // look here: http://twitter.github.com/bootstrap/base-css.html#tables
+                    table: 'table',
+                    caption: 'caption',
+                    footerRow: '',
+                    footerCells: '',
+                    icons: '', // add "icon-white" to make them white; this icon class is added to the <i> in the header
+                    sortNone: '',
+                    sortAsc: 'glyphicon glyphicon-chevron-up',
+                    sortDesc: 'glyphicon glyphicon-chevron-down',
+                    active: '', // applied when column is sorted
+                    hover: '', // use custom css here - bootstrap class may not override it
+                    filterRow: '', // filter row class
+                    even: '', // odd row zebra striping
+                    odd: '',  // even row zebra striping
+                });
+                
+                $("#pull-requests").tablesorter({
+                    theme: 'bootstrap',
+                    headerTemplate: '{content} {icon}',
+                    widgets: [ "uitheme" ],
+                    sortList: [[3,1]],
                 });
                 
                 refresh();
