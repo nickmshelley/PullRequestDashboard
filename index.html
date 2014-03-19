@@ -18,6 +18,7 @@
             tr.pull td.number {
                 text-align: right;
             }
+            tr.pull td.assignee,
             tr.pull td.requester {
                 white-space: nowrap;
             }
@@ -99,6 +100,7 @@
                         <th>Subject</th>
                         <th>Repository</th>
                         <th>Opened</th>
+                        <th>Assignee</th>
                         <th>Requester</th>
                         <th class="approve">CR</th>
                         <th class="verify">V</th>
@@ -166,6 +168,13 @@
                 <td class="title"><a href="{{html_url}}">{{title}}</a></td>
                 <td class="repo"><a href="{{../repo.html_url}}">{{../repo.name}}</a></td>
                 <td class="opened">{{created_at_humanized}}</td>
+                <td class="assignee">
+                    {{#if assignee}}
+                    <a href="{{assignee.html_url}}"><img class="gravatar" src="{{assignee.avatar_url}}" width="18px" height="18px" /></a> <a href="{{assignee.html_url}}">{{assignee.login}}</a>
+                    {{else}}
+                    <span class="text-muted">Not assigned</span>
+                    {{/if}}
+                </td>
                 <td class="requester"><a href="{{user.html_url}}"><img class="gravatar" src="{{user.avatar_url}}" width="18px" height="18px" /></a> <a href="{{user.html_url}}">{{user.login}}</a></td>
                 <td class="approve"><span class="text-muted">...</span></td>
                 <td class="verify"><span class="text-muted">...</span></td>
