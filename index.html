@@ -167,7 +167,7 @@
                 <td class="number">#{{number}}</td>
                 <td class="title"><a href="{{html_url}}">{{title}}</a></td>
                 <td class="repo"><a href="{{../repo.html_url}}">{{../repo.name}}</a></td>
-                <td class="opened">{{created_at_humanized}}</td>
+                <td class="opened" data-date="{{created_at}}">{{created_at_humanized}}</td>
                 <td class="assignee">
                     {{#if assignee}}
                     <a href="{{assignee.html_url}}"><img class="gravatar" src="{{assignee.avatar_url}}" width="18px" height="18px" /></a> <a href="{{assignee.html_url}}">{{assignee.login}}</a>
@@ -474,6 +474,17 @@
                     sortDesc: 'glyphicon glyphicon-chevron-down',
                 });
                 
+                $.tablesorter.addParser({
+                    id: 'datadate',
+                    is: function() {
+                        return false;
+                    },
+                    format: function(s, table, cell, cellIndex) {
+                        return $(cell).data('date');
+                    },
+                    type: 'text'
+                });
+                
                 $('#repo-filter').val(localStorage['repo-filter']);
                 
                 $('#repo-filter').change(function() {
@@ -490,7 +501,8 @@
                     theme: 'bootstrap',
                     headerTemplate: '{content} {icon}',
                     widgets: [ "uitheme" ],
-                    sortList: [[0,1]],
+                    headers: { 3: { sorter: 'datadate' } },
+                    sortList: [[3,1]],
                 });
                 
                 refresh();
