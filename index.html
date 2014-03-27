@@ -186,6 +186,8 @@
             $(function() {
                 var approveSentinels = [ ':+1:', ':v:', ':metal:' ];
                 var rejectSentinels = [ ':-1:', ':poop:', ':facepunch:' ];
+                var buildSuccessSentinels = ['All is well', 'build succeeded'];
+                var buildFailureSentinels = ['build failed'];
                 
                 var approveStatus = function(status, url) {
                     switch (status) {
@@ -193,6 +195,10 @@
                         return '<a class="text-success" href="' + url + '"><span class="glyphicon glyphicon-ok"></span><span class="hidden">1</span></a>';
                     case 'rejected':
                         return '<a class="text-danger" href="' + url + '"><span class="glyphicon glyphicon-remove"></span><span class="hidden">2</span></a>';
+                    case 'pending_review':
+                    return '<a class="text-muted" href="' + url + '"><span class="glyphicon glyphicon-eye-open"></span><span class="hidden">2</span></a>';
+                    case 'pending_changes':
+                    return '<a class="text-muted" href="' + url + '"><span class="glyphicon glyphicon-pencil"></span><span class="hidden">2</span></a>';
                     default:
                         return '<span class="text-muted">&mdash;<span class="hidden">3</span></span>';
                     }
@@ -218,17 +224,40 @@
                                     })) {
                                         approve_status = 'approved';
                                         approve_url = comment.html_url;
-                                    }
-                
-                                    if (rejectSentinels.some(function(s) {
+                                    } else if (rejectSentinels.some(function(s) {
                                         return body.indexOf(s) >= 0;
                                     })) {
                                         approve_status = 'rejected';
                                         approve_url = comment.html_url;
+                                    } else if (buildFailureSentinels.some(function(s) {
+                                        return body.indexOf(s) >= 0;
+                                    })) {
+                                        // Build failure doesn't override rejection. To be clear it failed review, as well as the build
+                                        if (approve_status != 'rejected') {
+                                            approve_status = 'pending_changes';
+                                            approve_url = comment.html_url;
+                                        }
+                                    } else {
+                                        // See if we're in a finer grained state
+                                        if (pull.user.login == comment.user.login) {
+                                            approve_status = 'pending_review';
+                                            approve_url = comment.html_url;
+                                        } else if (buildSuccessSentinels.some(function(s) {
+                                            return body.indexOf(s) >= 0;
+                                        })) {
+                                            // Build success status doesn't override a review
+                                            if (approve_status == '') {
+                                                approve_status = 'pending_changes';
+                                                approve_url = comment.html_url;
+                                            }
+                                        } else {
+                                            approve_status = 'pending_changes';
+                                            approve_url = comment.html_url;
+                                        }
                                     }
                                 }
                             });
-                
+
                             $('#pull-' + pull.id + ' .approve').html(approveStatus(approve_status, approve_url));
                             $("#pull-requests").trigger("update");
             
