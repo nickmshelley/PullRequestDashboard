@@ -110,18 +110,58 @@
                 </tbody>
             </table>
     
-            <div id="approve-legend" class="pull-left">
-                <p class="text-muted">Make a comment on a pull request with <span class="mono">:+1:</span> to approve or <span class="mono">:-1:</span> to reject.</p>
-                <p class="text-muted"><span class="text-success"><span class="glyphicon glyphicon-ok"></span></span> - Code is approved.</p>
-                <p class="text-muted"><span class="text-primary"><span class="glyphicon glyphicon-eye-open"></span></span> - Code needs review.</p>
-                <p class="text-muted"><span class="text-danger"><span class="glyphicon glyphicon-ok"></span></span> - Code needs changes.</p>     
+            <div class="clearfix">
+                <div id="approve-legend" class="pull-left">
+                    <p class="text-muted">Make a comment on a pull request with <span class="mono">:+1:</span> to approve or <span class="mono">:-1:</span> to reject.</p>
+                </div>
+            
+                <div class="pull-right">
+                    <p class="text-muted">
+                        <iframe src="http://ghbtns.com/github-btn.html?user=GalacticMegacorp&repo=PullRequestDashboard&type=fork"
+      allowtransparency="true" frameborder="0" scrolling="0" width="53" height="20"></iframe>
+                    </p>
+                </div>
             </div>
             
-            <div class="pull-right">
-                <p class="text-muted">
-                    <iframe src="http://ghbtns.com/github-btn.html?user=GalacticMegacorp&repo=PullRequestDashboard&type=fork"
-  allowtransparency="true" frameborder="0" scrolling="0" width="53" height="20"></iframe>
-                </p>
+            <div class="row">
+                <div class="col-sm-4 col-md-3">
+                    <p><strong>CR Legend</strong></p>
+                    <ul class="list-inline">
+                        <li><span class="text-muted">&mdash;</span></li>
+                        <li>Waiting for CI build.</li>
+                    </ul>
+                    <ul class="list-inline">
+                        <li><span class="text-success"><span class="glyphicon glyphicon-ok"></span></span></li>
+                        <li>Code is approved.</li>
+                    </ul>
+                    <ul class="list-inline">
+                        <li><span class="text-primary"><span class="glyphicon glyphicon-eye-open"></span></span></li>
+                        <li>Code needs to be reviewed.</li>
+                    </ul>
+                    <ul class="list-inline">
+                        <li><span class="text-danger"><span class="glyphicon glyphicon-wrench"></span></span></li>
+                        <li>Code needs to be improved.</li>
+                    </ul>
+                </div>
+                <div class="col-sm-4 col-md-3">
+                    <p><strong>V Legend</strong></p>
+                    <ul class="list-inline">
+                        <li><span class="text-muted">&mdash;</span></li>
+                        <li>No CI build.</li>
+                    </ul>
+                    <ul class="list-inline">
+                        <li><span class="text-success"><span class="glyphicon glyphicon-ok"></span></span></li>
+                        <li>CI build succeeded.</li>
+                    </ul>
+                    <ul class="list-inline">
+                        <li><span class="text-primary"><span class="glyphicon glyphicon-time"></span></span></li>
+                        <li>CI build in progress.</li>
+                    </ul>
+                    <ul class="list-inline">
+                        <li><span class="text-danger"><span class="glyphicon glyphicon-remove"></span></span></li>
+                        <li>CI build failed.</li>
+                    </ul>
+                </div>
             </div>
         </div>
         
@@ -212,6 +252,7 @@
                         repo_api.listComments(pull.number, function(err, comments) {
                             approve_status = '';
                             approve_url = '';
+                            reviewed = false;
                             
                             $.each(comments, function(i, comment) {
                                 var comment_date = comment.updated_at;
@@ -219,30 +260,30 @@
                                     // Get the comment text by converting it from Markdown to HTML, then stripping the HTML markup
                                     var body_html = new Showdown.converter().makeHtml(comment.body);
                                     var body = $("<div/>").html(body_html).text();
+                                    
+                                    var hasSentinel = function(text, sentinels) {
+                                        return sentinels.some(function(s) {
+                                            return text.indexOf(s) >= 0;
+                                        })
+                                    };
             
-                                    if (approveSentinels.some(function(s) {
-                                        return body.indexOf(s) >= 0;
-                                    })) {
+                                    if (hasSentinel(body, approveSentinels)) {
                                         approve_status = 'approved';
                                         approve_url = comment.html_url;
-                                    } else if (rejectSentinels.some(function(s) {
-                                        return body.indexOf(s) >= 0;
-                                    })) {
+                                        reviewed = true;
+                                    } else if (hasSentinel(body, rejectSentinels)) {
                                         approve_status = 'pending_changes';
                                         approve_url = comment.html_url;
-                                    } else if (buildFailureSentinels.some(function(s) {
-                                        return body.indexOf(s) >= 0;
-                                    })) {
+                                        reviewed = true;
+                                    } else if (hasSentinel(body, buildFailureSentinels)) {
                                         approve_status = 'pending_changes';
                                         approve_url = comment.html_url;
                                     } else if (pull.user.login == comment.user.login) {
-                                            approve_status = 'pending_review';
-                                            approve_url = comment.html_url;
-                                    } else if (buildSuccessSentinels.some(function(s) {
-                                        return body.indexOf(s) >= 0;
-                                    })) {
+                                        approve_status = 'pending_review';
+                                        approve_url = comment.html_url;
+                                    } else if (hasSentinel(body, buildSuccessSentinels)) {
                                         // Build success status doesn't override a review
-                                        if (approve_status == '') {
+                                        if (!reviewed) {
                                             approve_status = 'pending_review';
                                             approve_url = comment.html_url;
                                         }
