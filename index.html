@@ -112,6 +112,9 @@
     
             <div id="approve-legend" class="pull-left">
                 <p class="text-muted">Make a comment on a pull request with <span class="mono">:+1:</span> to approve or <span class="mono">:-1:</span> to reject.</p>
+                <p class="text-muted"><span class="text-success"><span class="glyphicon glyphicon-ok"></span></span> - Code is approved.</p>
+                <p class="text-muted"><span class="text-primary"><span class="glyphicon glyphicon-eye-open"></span></span> - Code needs review.</p>
+                <p class="text-muted"><span class="text-danger"><span class="glyphicon glyphicon-ok"></span></span> - Code needs changes.</p>     
             </div>
             
             <div class="pull-right">
@@ -193,14 +196,12 @@
                     switch (status) {
                     case 'approved':
                         return '<a class="text-success" href="' + url + '"><span class="glyphicon glyphicon-ok"></span><span class="hidden">1</span></a>';
-                    case 'rejected':
-                        return '<a class="text-danger" href="' + url + '"><span class="glyphicon glyphicon-remove"></span><span class="hidden">2</span></a>';
                     case 'pending_review':
-                        return '<a class="text-muted" href="' + url + '"><span class="glyphicon glyphicon-eye-open"></span><span class="hidden">2</span></a>';
+                        return '<a class="text-primary" href="' + url + '"><span class="glyphicon glyphicon-eye-open"></span><span class="hidden">2</span></a>';
                     case 'pending_changes':
-                        return '<a class="text-warning" href="' + url + '"><span class="glyphicon glyphicon-pencil"></span><span class="hidden">2</span></a>';
+                        return '<a class="text-danger" href="' + url + '"><span class="glyphicon glyphicon-wrench"></span><span class="hidden">3</span></a>';
                     default:
-                        return '<span class="text-muted">&mdash;<span class="hidden">3</span></span>';
+                        return '<span class="text-muted">&mdash;<span class="hidden">4</span></span>';
                     }
                 };
                 
@@ -227,33 +228,27 @@
                                     } else if (rejectSentinels.some(function(s) {
                                         return body.indexOf(s) >= 0;
                                     })) {
-                                        approve_status = 'rejected';
+                                        approve_status = 'pending_changes';
                                         approve_url = comment.html_url;
                                     } else if (buildFailureSentinels.some(function(s) {
                                         return body.indexOf(s) >= 0;
                                     })) {
-                                        // Build failure doesn't override rejection. To be clear it failed review, as well as the build
-                                        if (approve_status != 'rejected') {
-                                            approve_status = 'pending_changes';
+                                        approve_status = 'pending_changes';
+                                        approve_url = comment.html_url;
+                                    } else if (pull.user.login == comment.user.login) {
+                                            approve_status = 'pending_review';
+                                            approve_url = comment.html_url;
+                                    } else if (buildSuccessSentinels.some(function(s) {
+                                        return body.indexOf(s) >= 0;
+                                    })) {
+                                        // Build success status doesn't override a review
+                                        if (approve_status == '') {
+                                            approve_status = 'pending_review';
                                             approve_url = comment.html_url;
                                         }
                                     } else {
-                                        // See if we're in a finer grained state
-                                        if (pull.user.login == comment.user.login) {
-                                            approve_status = 'pending_review';
-                                            approve_url = comment.html_url;
-                                        } else if (buildSuccessSentinels.some(function(s) {
-                                            return body.indexOf(s) >= 0;
-                                        })) {
-                                            // Build success status doesn't override a review
-                                            if (approve_status == '') {
-                                                approve_status = 'pending_changes';
-                                                approve_url = comment.html_url;
-                                            }
-                                        } else {
-                                            approve_status = 'pending_changes';
-                                            approve_url = comment.html_url;
-                                        }
+                                        approve_status = 'pending_changes';
+                                        approve_url = comment.html_url;
                                     }
                                 }
                             });
