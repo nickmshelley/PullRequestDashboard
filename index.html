@@ -250,9 +250,8 @@
                         var commit_date = commit.committer.date;
                 
                         repo_api.listComments(pull.number, function(err, comments) {
-                            approve_status = '';
-                            approve_url = '';
-                            reviewed = false;
+                            approve_status = 'pending_review';
+                            approve_url = commit.html_url;
                             
                             $.each(comments, function(i, comment) {
                                 var comment_date = comment.updated_at;
@@ -275,19 +274,10 @@
                                         approve_status = 'pending_changes';
                                         approve_url = comment.html_url;
                                         reviewed = true;
-                                    } else if (hasSentinel(body, buildFailureSentinels)) {
-                                        approve_status = 'pending_changes';
-                                        approve_url = comment.html_url;
                                     } else if (pull.user.login == comment.user.login) {
                                         approve_status = 'pending_review';
                                         approve_url = comment.html_url;
-                                    } else if (hasSentinel(body, buildSuccessSentinels)) {
-                                        // Build success status doesn't override a review
-                                        if (!reviewed) {
-                                            approve_status = 'pending_review';
-                                            approve_url = comment.html_url;
-                                        }
-                                    } else {
+                                    } else if (!hasSentinel(body, buildFailureSentinels) && !hasSentinel(body, buildSuccessSentinels)) {
                                         approve_status = 'pending_changes';
                                         approve_url = comment.html_url;
                                     }
