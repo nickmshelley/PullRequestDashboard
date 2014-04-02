@@ -24,8 +24,10 @@
             }
             th.approve,
             th.verify,
+            th.pass_day,
             tr.pull td.approve,
-            tr.pull td.verify {
+            tr.pull td.verify,
+            tr.pull td.pass_day {
                 text-align: center;
             }
             .gravatar {
@@ -104,6 +106,7 @@
                         <th>Requester</th>
                         <th class="approve">CR</th>
                         <th class="verify">V</th>
+                        <th class="pass_day">D</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -221,6 +224,7 @@
                 <td class="requester"><a href="{{user.html_url}}"><img class="gravatar" src="{{user.avatar_url}}" width="18px" height="18px" /></a> <a href="{{user.html_url}}">{{user.login}}</a></td>
                 <td class="approve"><span class="text-muted">...</span></td>
                 <td class="verify"><span class="text-muted">...</span></td>
+                <td class="pass_day"><span class="text-muted">...</span></td>
             </tr>
             {{/each}}
         </script>
@@ -231,6 +235,7 @@
                 var rejectSentinels = [ ':-1:', ':poop:', ':facepunch:' ];
                 var buildSuccessSentinels = ['All is well', 'build succeeded'];
                 var buildFailureSentinels = ['build failed'];
+                var daysOfWeek = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
                 
                 var approveStatus = function(status, url) {
                     switch (status) {
@@ -318,24 +323,50 @@
                     }
                 };
                 
+                var passDay = function(first_pass_day, first_pass_url) {
+                    // Convert the date to a two digit day and make it a link to the build.
+                    if (first_pass_day == '') {
+                        return '<span class="text-muted">&mdash;<span class="hidden">8</span></span>';
+                    } else {
+                        var date = new Date(first_pass_day);
+                        var dayIndex = date.getDay();
+                        var dayName = daysOfWeek[dayIndex];
+                        
+                        return '<span class="text-success">' + dayName + '<span class="hidden">' + (dayIndex + 1) + '</span></span>';
+                    }
+                };
+                
                 var updateVerificationStatus = function(repo_api, pull, cb) {
                     repo_api.listStatuses(pull.head.sha, function(err, statuses) {
                         var verify_status = '';
                         var verify_url = '';
-        
+                        var first_pass_day = '';
+                        var first_pass_url = '';
+                        
                         if (statuses.length > 0) {
                             var status = statuses[0];
                             verify_status = status.state;
                             verify_url = status.target_url;
+
+                            $.each(statuses, function(i, status) {
+                               if (status.state == "success") {
+                                    first_pass_day = status.created_at;
+                                    first_pass_url = status.target_url;
+                                    return false;
+                                }
+                            });
                         }
             
                         $('#pull-' + pull.id + ' .verify').html(verifyStatus(verify_status, verify_url));
+                        $("#pull-requests").trigger("update");
+                        
+                        $('#pull-' + pull.id + ' .pass_day').html(passDay(first_pass_day, first_pass_url));
                         $("#pull-requests").trigger("update");
     
                         cb(err);
                     });
                 };
-            
+
                 var getRepoPulls = function(github_api, repo, cb) {
                     var repo_api = github_api.getRepo(repo.owner.login, repo.name);
                  
