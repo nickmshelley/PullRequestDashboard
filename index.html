@@ -323,24 +323,6 @@
                     }
                 };
                 
-                var updateVerificationStatus = function(repo_api, pull, cb) {
-                    repo_api.listStatuses(pull.head.sha, function(err, statuses) {
-                        var verify_status = '';
-                        var verify_url = '';
-        
-                        if (statuses.length > 0) {
-                            var status = statuses[0];
-                            verify_status = status.state;
-                            verify_url = status.target_url;
-                        }
-            
-                        $('#pull-' + pull.id + ' .verify').html(verifyStatus(verify_status, verify_url));
-                        $("#pull-requests").trigger("update");
-    
-                        cb(err);
-                    });
-                };
-                
                 var passDay = function(first_pass_day, first_pass_url) {
                     // Convert the date to a two digit day and make it a link to the build.
                     if (first_pass_day == '') {
@@ -354,23 +336,30 @@
                     }
                 };
                 
-                var updateFirstSuccessfulBuildDay = function(repo_api, pull, cb) {
+                var updateVerificationStatus = function(repo_api, pull, cb) {
                     repo_api.listStatuses(pull.head.sha, function(err, statuses) {
+                        var verify_status = '';
+                        var verify_url = '';
                         var first_pass_day = '';
                         var first_pass_url = '';
                         
-                        if (statuses.length > 0) {
-                            $.each(statuses, function(i, status) {
-                              if (status.state == "success") {
-                                  first_pass_day = status.created_at;
-                                  return false;
-                                }
-                            });
-                        }
-
+                        $.each(statuses, function(i, status) {
+                            verify_status = status.state;
+                            verify_url = status.target_url;
+                            
+                            if (status.state == "success") {
+                                first_pass_day = status.created_at;
+                                first_pass_url = status.target_url;
+                                return false;
+                            }
+                        });
+            
+                        $('#pull-' + pull.id + ' .verify').html(verifyStatus(verify_status, verify_url));
+                        $("#pull-requests").trigger("update");
+                        
                         $('#pull-' + pull.id + ' .pass_day').html(passDay(first_pass_day, first_pass_url));
                         $("#pull-requests").trigger("update");
-
+    
                         cb(err);
                     });
                 };
@@ -407,9 +396,6 @@
                                 });
                                 tasks.push(function() {
                                     updateApprovalStatus(repo_api, pull, cb);
-                                });
-                                tasks.push(function() {
-                                    updateFirstSuccessfulBuildDay(repo_api, pull, cb);
                                 });
                             });
                         
