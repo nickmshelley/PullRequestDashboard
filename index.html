@@ -343,16 +343,19 @@
                         var first_pass_day = '';
                         var first_pass_url = '';
                         
-                        $.each(statuses, function(i, status) {
+                        if (statuses.length > 0) {
+                            var status = statuses[0];
                             verify_status = status.state;
                             verify_url = status.target_url;
-                            
-                            if (status.state == "success") {
-                                first_pass_day = status.created_at;
-                                first_pass_url = status.target_url;
-                                return false;
-                            }
-                        });
+
+                            $.each(statuses, function(i, status) {
+                               if (status.state == "success") {
+                                    first_pass_day = status.created_at;
+                                    first_pass_url = status.target_url;
+                                    return false;
+                                }
+                            });
+                        }
             
                         $('#pull-' + pull.id + ' .verify').html(verifyStatus(verify_status, verify_url));
                         $("#pull-requests").trigger("update");
