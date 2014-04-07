@@ -348,7 +348,7 @@
                             verify_status = status.state;
                             verify_url = status.target_url;
 
-                            $.each(statuses, function(i, status) {
+                            $.each(statuses.reverse(), function(i, status) {
                                if (status.state == "success") {
                                     first_pass_day = status.created_at;
                                     first_pass_url = status.target_url;
