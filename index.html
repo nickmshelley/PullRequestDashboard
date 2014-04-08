@@ -257,6 +257,8 @@
                         repo_api.listComments(pull.number, function(err, comments) {
                             approve_status = 'pending_review';
                             approve_url = commit.html_url;
+                            var first_pass_day = '';
+                            var first_pass_url = '';
                             
                             $.each(comments, function(i, comment) {
                                 var comment_date = comment.updated_at;
@@ -286,12 +288,20 @@
                                         approve_status = 'pending_changes';
                                         approve_url = comment.html_url;
                                     }
+                                    
+                                    if (first_pass_day == '' && hasSentinel(body, buildSuccessSentinels)) {
+                                        first_pass_day = comment_date;
+                                        first_pass_url = comment.html_url;
+                                    }
                                 }
                             });
 
                             $('#pull-' + pull.id + ' .approve').html(approveStatus(approve_status, approve_url));
                             $("#pull-requests").trigger("update");
-            
+                            
+                            $('#pull-' + pull.id + ' .pass_day').html(passDay(first_pass_day, first_pass_url));
+                            $("#pull-requests").trigger("update");
+                            
                             cb(err);
                         });
                     });
@@ -340,29 +350,16 @@
                     repo_api.listStatuses(pull.head.sha, function(err, statuses) {
                         var verify_status = '';
                         var verify_url = '';
-                        var first_pass_day = '';
-                        var first_pass_url = '';
                         
                         if (statuses.length > 0) {
                             var status = statuses[0];
                             verify_status = status.state;
                             verify_url = status.target_url;
-
-                            $.each(statuses.reverse(), function(i, status) {
-                               if (status.state == "success") {
-                                    first_pass_day = status.created_at;
-                                    first_pass_url = status.target_url;
-                                    return false;
-                                }
-                            });
                         }
             
                         $('#pull-' + pull.id + ' .verify').html(verifyStatus(verify_status, verify_url));
                         $("#pull-requests").trigger("update");
                         
-                        $('#pull-' + pull.id + ' .pass_day').html(passDay(first_pass_day, first_pass_url));
-                        $("#pull-requests").trigger("update");
-    
                         cb(err);
                     });
                 };
