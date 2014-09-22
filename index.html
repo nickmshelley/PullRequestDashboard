@@ -6,7 +6,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
         <title>Pull Request Dashboard</title>
-        <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css"/>
+        <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootswatch/3.2.0/yeti/bootstrap.min.css"/>
         <link rel="stylesheet" href="Vendor/tablesorter/css/theme.bootstrap.css"/>
         
         <style>
@@ -255,8 +255,8 @@
                         var commit_date = commit.committer.date;
                 
                         repo_api.listComments(pull.number, function(err, comments) {
-                            approve_status = 'pending_review';
-                            approve_url = commit.html_url;
+                            var approve_status = 'pending_review';
+                            var approve_url = commit.html_url;
                             var first_pass_day = '';
                             var first_pass_url = '';
                             
@@ -272,15 +272,13 @@
                                             return text.indexOf(s) >= 0;
                                         })
                                     };
-            
+
                                     if (hasSentinel(body, approveSentinels)) {
                                         approve_status = 'approved';
                                         approve_url = comment.html_url;
-                                        reviewed = true;
                                     } else if (hasSentinel(body, rejectSentinels)) {
                                         approve_status = 'pending_changes';
                                         approve_url = comment.html_url;
-                                        reviewed = true;
                                     } else if (pull.user.login == comment.user.login) {
                                         approve_status = 'pending_review';
                                         approve_url = comment.html_url;
